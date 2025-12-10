@@ -316,5 +316,5 @@ def home():
     return {"message": "Backend + Supabase running!"}
 
 if __name__ == "__main__":
-    port = int(os.getenv("BACKEND_PORT", 4567))
+    port = int(os.getenv("BACKEND_PORT", 10000))
     uvicorn.run(host='127.0.0.1', port=port, app="main:app", reload=True)
