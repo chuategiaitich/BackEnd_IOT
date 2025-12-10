@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 1. API list: (HTTPS)
 __________________________
@@ -54,3 +55,6 @@ MQTT_USERNAME  =  embeded_device
 MQTT_PASSWORD  =  123123
 
 __________________________
+=======
+# BackEnd_IOT
+>>>>>>> 89ebc611b89449ab07f74a727279ac72171acbb0
