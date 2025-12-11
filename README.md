@@ -2,7 +2,7 @@
 __________________________
 ____ for frontend dev ____
 
-Backend_API_domain     :
+Backend_API_domain     :  https://backend-iot-tqcf.onrender.com
 
 GET  /                 :  Check backend live
 

@@ -7,6 +7,13 @@ import httpx
 import uvicorn
 from dotenv import load_dotenv
 
+API_KEY = "esp32_jjsskkdmmxuuep"
+
+def get_api_key(api_key: str = Header(None, alias="X-API-Key")):
+    if api_key != API_KEY:
+        raise HTTPException(401, "API Key sai hoặc thiếu")
+    return api_key
+
 load_dotenv()
 app = FastAPI(title="IoT Backend with Supabase")
 
@@ -310,6 +317,49 @@ async def publish(req: PublishRequest, user=Depends(get_current_user)):
         raise
     except Exception as e:
         raise HTTPException(500, f"Lỗi server: {str(e)}")
+
+@app.post("/esp32-publish")         # ← ESP32 sẽ gọi link này
+async def esp32_publish(req: PublishRequest):
+    try:
+        valid_tables = ["messages", "values", "history"]   # users thì không cho vào đây
+        if req.table_name not in valid_tables:
+            raise HTTPException(400, f"table_name phải là một trong: {valid_tables}")
+
+        data_to_save = req.data.copy()
+
+        # Xử lý giống hệt phần cũ của bạn
+        if req.table_name == "messages":
+            data_to_save.setdefault("topic", req.topic)
+            if "payload" not in data_to_save:
+                data_to_save["payload"] = str(req.data)
+
+        elif req.table_name == "values":
+            if "data" not in data_to_save:
+                raise HTTPException(400, "Table 'values' cần field 'data' (float)")
+
+        elif req.table_name == "history":
+            data_to_save.setdefault("performer", "esp32_device")   # cố định
+            if "value" not in data_to_save:
+                raise HTTPException(400, "Table 'history' cần field 'value'")
+
+        # Publish MQTT
+        mqtt_payload = {
+            "table_name": req.table_name,
+            **data_to_save
+        }
+        publish_to_mqtt(req.topic, mqtt_payload)
+
+        # Lưu Supabase
+        saved = save_to_supabase(req.table_name, data_to_save)
+        if not saved:
+            raise HTTPException(500, "Không lưu được vào database")
+
+        return {"status": "success", "table": req.table_name, "topic": req.topic}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"Lỗi: {str(e)}")
 
 @app.get("/")
 def home():
